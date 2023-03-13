@@ -1,0 +1,48 @@
+VichuBot
+#1f83c2
+https://adwidu.000webhostapp.com/VichuBot/logo.png
+Menu de ayuda del VichuBot, usa el prefix "vb/" para usar un comando
+elpepe
+Intentalo, esta weno [JUEGO]
+voltear_moneda
+voltea una moneda y te dice si fue cara o sello [JUEGO]
+cachipun
+juega cachipun con el bot [JUEGO]
+hackear
+Muestra la direccion ip, junto con el correo y contrasena de un usuario [JUEGO]
+quegei
+Muestra un porcentaje de que tan gay es un usario [JUEGO]
+meme
+Manda un meme, puedes pedirle a los admins por medio de ticket que agreguen uno [ENTRETENIMIENTO]
+musica
+Descarga un video de youtube y reproduce su audio en el chat de voz de discord, si no se habia reproducido antes se descargara el video [ENTRETENIMIENTO]
+musica_ar
+Te manda una lista de las canciones ya descargadas para que se reproduzcan en poco tiempo [ENTRETENIMIENTO]
+parar_musica
+Para la musica que se esta reproduciendo y abandona el chat de voz [ENTRETENIMIENTO]
+ayuda
+Muestra este mensaje [AYUDA]
+ban
+banea a un usuario [ADMINS]
+kick
+hecha a un usuario [ADMINS]
+warn
+advierte un usuario [ADMINS]
+get_warnings
+te dice cuantas advertencias ha tenido un usuario sin darle una advertencia [ADMINS]
+delete_channel
+borra un canal [ADMINS]
+vote
+hace una votacion de hasta 5 opciones [ADMINS]
+add_admin
+Hace a un usuario un admin [ADMINS]
+print_admins
+manda un tag simple a todos los admins del servidor [ADMINS]
+reload
+recarga la configuracion del bot, util cuando se cambia y no es posible reiniciarlo [ADMINS]
+shutdown
+apaga el bot [ADMINS]
+clean
+borra hasta 100 mensajes en un canal [ADWIDU/AWIWU]
+ticket_buttons
+Habilita el boton para hacer un ticket [ADWIDU/AWIWU]
