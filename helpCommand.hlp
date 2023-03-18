@@ -40,8 +40,8 @@ print_admins
 manda un tag simple a todos los admins del servidor [ADMINS]
 reload
 recarga la configuracion del bot, util cuando se cambia y no es posible reiniciarlo [ADMINS]
-shutdown
-apaga el bot [ADMINS]
+reboot
+reinicia el bot [ADMINS]
 clean
 borra hasta 100 mensajes en un canal [ADWIDU/AWIWU]
 ticket_buttons

@@ -15,7 +15,7 @@ def get_password_by_num(number,jsonString):
     jsonData = json.loads(jsonString)
     text = jsonData["password" + str(number+1)]
     return (text)
-def get_warnings(member: discord.Member, objectType: type[int | str]) -> int | str: 
+def get_warnings(member: discord.Member, objectType): 
     warningsFile = open("warnings.wrn","r")
     for line in warningsFile.readlines():
         if(line.startswith(str(member.id))):
