@@ -1,7 +1,6 @@
 #imports
 import io
 import json
-from msilib.schema import File
 import random
 import discord
 import time
@@ -19,15 +18,16 @@ from moviepy.editor import *
 sentForStream = False
 connected_to_voice = False
 song = None
-intents = discord.Intents.all()
-intents.message_content = True
-bot = commands.Bot(command_prefix='vb/', intents=intents,help_command=None)
+
+tickets_message = None
+tickets_view = None
 
 #Variable Initialization
 iniFile = configparser.ConfigParser()
 iniFile.read('configData.ini')
 
 token = iniFile.get('Initialization data','token')
+prefix = iniFile.get('Initialization data', 'prefix')
 warningsTillMute = iniFile.get('Initialization data','warningsTillKick')
 canUseReloadCommand = iniFile.getboolean("On run data", "canUseReloadCommand")
 memesQuantity = iniFile.getint("On run data", "memesQuantity")
@@ -51,23 +51,16 @@ ticketJso = open("ticketMessages.json","r")
 ticketJson = json.loads(ticketJso.readline())
 print("Loaded .json Data")
 
-helpFile = open("helpCommand.hlp")
-helpData = helpFile.readlines()
-helpEmbed = discord.Embed()
-helpEmbed.set_author(name=helpData[0],icon_url=helpData[2])
-helpEmbed.color = discord.Color.from_str(helpData[1])
-helpEmbed.description = helpData[3]
-helpFile.close()
-for i in range(4,len(helpData), 2):
-    helpEmbed.add_field(name=helpData[i],value=helpData[i+1],inline=False)
-print("Loaded .hlp Data")
-
 __temp_adminsids = open("admins.conf","r").readlines()
 _adminsids = []
 for i in range(len(__temp_adminsids)):
     _adminsids += [int(__temp_adminsids[i])]
 
 print("Loaded .conf Data")
+
+intents = discord.Intents.all()
+intents.message_content = True
+bot = commands.Bot(command_prefix=prefix, intents=intents,help_command=None)
 
 pasturl = ["","",""]
 
@@ -197,6 +190,7 @@ async def cachipun(ctx):
     b.callback = pp
     mview.add_item(b)
     message = await ctx.send("Caaa- chiii- pun", view=mview) #Cachipun
+
 """
 @bot.command()
 async def gato(ctx: commands.Context):
@@ -446,7 +440,6 @@ async def musica(ctx: commands.Context, *url):
             def download():
                 nonlocal realurl
                 
-                print("downloading")
                 try:
                     url = YouTube(realurl)
                 except Exception:
@@ -457,24 +450,24 @@ async def musica(ctx: commands.Context, *url):
                 uffer = io.BytesIO()
                 video.stream_to_buffer(uffer)
                 return uffer
-            try:
-                vc = await voicechannel.connect(self_deaf = True)
-            except Exception:
-                vc = bot.voice_clients[0]
+            
+            
+            vChannel = await voicechannel.connect(reconnect=True,self_deaf=True)
+            print("downloading")
             global song 
             song = await asyncio.to_thread(download)
+            await ctx.reply("Claro! conectando y reproduciendo '" + realurl.replace(".mp4","") + "'")
             
             # Wrap the binary data in a PCMVolumeTransformer
             
             audio_source = discord.FFmpegPCMAudio(io.BytesIO(song.getvalue()),pipe=True)
-            await ctx.reply("Claro! conectando y reproduciendo '" + realurl.replace(".mp4","") + "'")
+            
             
                 # Play the audio
-            vc.play(audio_source)
-            while vc.is_playing() == True:
+            vChannel.play(audio_source)
+            while vChannel.is_playing() == True:
                 await asyncio.sleep(1)
 
-            await vc.disconnect(force=True)
             connected_to_voice = False
             
         else:
@@ -517,7 +510,7 @@ async def reboot(ctx):
 
 @bot.command()
 async def reload(ctx):
-    global _adminsids, __temp_adminsids, canUseReloadCommand, iniFile, helpEmbed, helpData, helpFile, token, memesQuantity, memesJson, memesJso, emailsJso, emailsJson, emailsQuantity
+    global _adminsids, __temp_adminsids, canUseReloadCommand, iniFile, token, memesQuantity, memesJson, memesJso, emailsJso, emailsJson, emailsQuantity
     global passwordsJso, passwordsJson, passwordsQuantity, ticketJso, ticketJson, warningsTillMute
     
     if ctx.author.id in _adminsids:
@@ -594,19 +587,6 @@ async def reload(ctx):
             await ctx.send("Se ha recargado la data de ticketMessages.json")
             print("Loaded .json Data")
 
-
-            helpFile = open("helpCommand.hlp")
-            helpData = helpFile.readlines()
-            helpEmbed = discord.Embed()
-            helpEmbed.set_author(name=helpData[0],icon_url=helpData[2])
-            helpEmbed.color = discord.Color.from_str(helpData[1])
-            helpEmbed.description = helpData[3]
-            helpFile.close()
-            for i in range(4,len(helpData), 2):
-                helpEmbed.add_field(name=helpData[i],value=helpData[i+1],inline=False)
-            print("Loaded .hlp Data")
-            await ctx.send("Se ha recargado la data de helpCommand.hlp")
-
             __temp_adminsids = open("admins.conf","r").readlines()
             _adminsids = []
             for i in range(len(__temp_adminsids)):
@@ -624,8 +604,104 @@ async def reload(ctx):
 
 @bot.command()
 async def ayuda(ctx):
-    global helpEmbed
-    await ctx.send(embed=helpEmbed) #Ayuda
+    global prefix
+    helpEmbed = discord.Embed()
+    helpEmbed.set_author(name="VichuBot",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+    helpEmbed.color = discord.Color.from_str("#0035d4")
+    helpEmbed.title = "Menu de ayuda"
+    helpEmbed.set_thumbnail(url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+    helpEmbed.description = f"Este es el menu de ayuda del VichuBot, para saber como usar un comando solo tienes que elegir una de las categorias de abajo\n recuerda que el prefix para usar un comando del bot es '{prefix}'"
+    helpEmbed.add_field(name="Categoria: 'Juegos'",value="En la categoria 'Juegos' podras ver todos los comandos que tengan que ver con juegos o similar", inline=True)
+    helpEmbed.add_field(name="Categoria: 'Entretenimiento'",value="En la categoria 'Entretenimiento' podras ver todos los comandos que sean de entretenimiento pero no se consideren juegos o chistes", inline=False)
+
+    async def helpMenu(self: discord.Interaction):
+        if self.data["values"][0] == "Juego":
+            em = discord.Embed()
+            em.set_author(name="VichuBot",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.set_thumbnail(url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.color = discord.Color.from_str("#0035d4")
+            em.title = "Comandos: Juegos"
+            em.description = "Estos son todos los juegos que cumplen con la categoria 'Juegos':"
+            em.add_field(name=prefix+"elpepe",value="EL PEPE", inline=False)
+            em.add_field(name=prefix+"voltear_moneda",value="Voltea una moneda y te dice si fue cara o sello", inline=False)
+            em.add_field(name=prefix+"cachipun",value="Reta al bot a un juego de cachipun con esta sencilla adaptacion del cachipun a discord", inline=False)
+            em.add_field(name=prefix+"hackear <@miembro>",value="Filtra toda la informacion personal de alguien de chill \U0001F919 molestalos con este simple comando", inline=False)
+            em.add_field(name=prefix+"quegei <@miembro>",value="Que tan gay es tu amigo?", inline=False)
+        else:
+            em = discord.Embed()
+            em.set_author(name="VichuBot",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.set_thumbnail(url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.color = discord.Color.from_str("#0035d4")
+            em.title = "Comandos: Entretenimiento"
+            em.description = "Estos son todos los juegos que cumplen con la categoria 'Entretenimiento':"
+            em.add_field(name=prefix+"meme",value="Recibe un momazo", inline=False)
+            em.add_field(name=prefix+"musica <URL/Nombre>",value="Pon musica de youtube y dale un mejor ambiente a la llamada", inline=False)
+            em.add_field(name=prefix+"parar_musica",value="Esta mala la musica? No importa, puedes hecharme de la llamada sin problemas", inline=False)
+        await self.response.send_message(embed=em)
+
+    async def helpMenuAdmins(self: discord.Interaction):
+        if self.data["values"][0] == "Canales":
+            em = discord.Embed()
+            em.set_author(name="VichuBot",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.set_thumbnail(url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.color = discord.Color.from_str("#0035d4")
+            em.title = "Comandos: Canales"
+            em.description = "Estos son todos los juegos que cumplen con la categoria de administracion 'Canales':"
+            em.add_field(name=prefix+"delete_channel",value="Borra el canal en el que el comando fue ejecutado", inline=False)
+            em.add_field(name=prefix+"vote <opcion 1> <opcion 2> [opcion 3] [opcion 4] [opcion 5]",value="Haz una votacion de hasta 5 opciones", inline=False)
+        elif self.data["values"][0] == "Usuarios":
+            em = discord.Embed()
+            em.set_author(name="VichuBot",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.set_thumbnail(url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.color = discord.Color.from_str("#0035d4")
+            em.title = "Comandos: Usuarios"
+            em.description = "Estos son todos los juegos que cumplen con la categoria 'Usuarios':"
+            em.add_field(name=prefix+"ban <@miembro> [razon]",value="banea a un usuario del servidor", inline=False)
+            em.add_field(name=prefix+"kick <@miembro> [razon]",value="hecha a un usuario del servidor", inline=False)
+            em.add_field(name=prefix+"warn <@miembro>",value="dale una advertencia a un usuario", inline=False)
+            em.add_field(name=prefix+"get_warnings <@miembro>",value="consulta las advertencias de un usuario", inline=False)
+            em.add_field(name=prefix+"print_admins", value="Te dice todos los usuarios del servidor que son administradores en el servidor", inline=False)
+            em.add_field(name=prefix+"add_admin <@miembro>", value="Le da el rango de <@&admin_ping>", inline=False)
+        else:
+            em = discord.Embed()
+            em.set_author(name="VichuBot",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.set_thumbnail(url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
+            em.color = discord.Color.from_str("#0035d4")
+            em.title = "Comandos: Usuarios"
+            em.description = "Estos son todos los juegos que cumplen con la categoria 'Usuarios':"
+            em.add_field(name=prefix+"reload", value="recarga la configuracion del bot, util si no es posible reiniciarlo, pero se requiere recargar la configuracion", inline=False)
+            em.add_field(name=prefix+"reboot", value="reinicia el bot", inline=False)
+        await self.response.send_message(embed=em)
+    mview = View()
+    select = discord.ui.Select(
+    min_values=1,
+    max_values=1,
+    placeholder="Elije una categoria",
+        options={discord.SelectOption(label="Juego", description="Puedes ver los juegos que tiene el bot!"),
+            discord.SelectOption(label="Entretenimiento", description="Utilidades de entretencion del bot!")
+        }
+    )
+
+    select.callback = helpMenu
+    mview.add_item(select)
+    select = discord.ui.Select(
+    min_values=1,
+    max_values=1,
+    placeholder="Elije una categoria de administracion!",
+        options={discord.SelectOption(label="Canales", description="Utilidades de manejo de usuarios!"),
+            discord.SelectOption(label="Usuarios", description="Utilidades de manejo de canales!")
+        }
+    )
+
+    select.callback = helpMenuAdmins
+    
+    global _adminsids
+    if ctx.author.id in _adminsids:
+        mview.add_item(select)
+        helpEmbed.add_field(name="Categoria: 'Canales' de administracion",value="En la categoria 'Canales' de administracion podras ver como puedes interactuar con los canales usando el VichuBot", inline=True)
+        helpEmbed.add_field(name="Categoria: 'Usuarios' de administracion",value="En la categoria 'Usuarios' de administracion podras ver como puedes administrar a los usuarios del servidor con el VichuBot", inline=False)
+
+    await ctx.send(embed=helpEmbed,view=mview,ephemeral=True) #Ayuda
 
 
 #Administrative commands
@@ -845,6 +921,7 @@ async def clean(ctx):
         
 @bot.command()
 async def ticket_buttons(ctx):
+    global tickets_message, tickets_view,tickets_views
     async def ticketButton(self:discord.interactions.Interaction):
         ticketCategory = None
         for i in range(len(bot.guilds[0].categories)):
@@ -856,25 +933,26 @@ async def ticket_buttons(ctx):
         overwrite = discord.PermissionOverwrite()
         overwrite.read_messages = False
         
-        ticketchannel = await ticketCategory.create_text_channel("ticket")
+        ticketchannel = await ticketCategory.create_text_channel("ticket-"+str(self.user.name))
         await ticketchannel.set_permissions(role, overwrite=overwrite)
         
         overwrite.read_messages = True
         await ticketchannel.set_permissions(user, overwrite=overwrite)
         
         member = bot.guilds[0].get_member(user.id)
-        await ticketchannel.send(ticketJson["message"].format(str(user.id), str(ticketJson["adminPing"])))
+
+        await ticketchannel.send(content=ticketJson["message"].format(str(user.id), str(ticketJson["adminPing"])))
         await self.response.defer()
 
     if ctx.author.id == 758050009210945636:
-        tk = TB.TicketButtons(discord.ButtonStyle.green,"Hacer un ticket", ticketButton)
+        tickets_view = TB.TicketButtons(discord.ButtonStyle.green,"Hacer un ticket", ticketButton)
 
 
         ticketEmbed = discord.Embed()
         ticketEmbed.set_author(name="Haz un ticket",icon_url="https://adwidu.000webhostapp.com/VichuBot/logo.png")
         ticketEmbed.color = discord.Color.from_str("#248044")
         ticketEmbed.description = "Preciona el boton (\U0001F4E9 Hacer un ticket) para iniciar un ticket y que el staff del servidor te brinde soporte"
-        message = await ctx.send(embed=ticketEmbed, view=tk) #Ticket_buttons
+        tickets_message = await ctx.send(embed=ticketEmbed, view=tickets_view) #Ticket_buttons
 
 @bot.command()
 async def vote(ctx: commands.Context, *args):
